@@ -35,18 +35,33 @@ def print_resource_usage():
     
     return metrics
 
-@st.cache_resource(ttl=3600)  # Cache for 1 hour
-def init_components() -> Tuple[DocumentDatabase, CodeGenerator]:
+# In app.py, update the init_components function:
+
+@st.cache_resource(ttl=3600)
+def init_components():
     """Initialize and cache the main components"""
     try:
         monitor.start("init_components")
+        
+        # Check if CUDA is available
+        if torch.cuda.is_available():
+            st.sidebar.success("🚀 GPU acceleration available")
+        else:
+            st.sidebar.info("💻 Running on CPU mode")
+        
         db = DocumentDatabase().create_or_load_db()
         generator = CodeGenerator()
+        
         monitor.end("init_components")
         return db, generator
+        
     except Exception as e:
         logging.error(f"Error initializing components: {str(e)}")
-        st.error(f"Error initializing components: {str(e)}")
+        st.error(f"""
+        Error initializing components: {str(e)}
+        
+        This app is running in CPU-only mode. Performance might be slower.
+        """)
         return None, None
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -57,11 +72,18 @@ def get_similar_docs(db, query: str, k: int = 3):
     monitor.end("similarity_search")
     return docs
 
+# Update the generate_code_cached function:
+
 @st.cache_data(ttl=300)
 def generate_code_cached(generator, prompt: str, max_length: int):
-    """Cache code generation results"""
+    """Cache code generation results with proper length handling"""
     monitor.start("code_generation")
-    result = generator.generate_code(prompt, max_length)
+    
+    # Adjust max_length based on prompt length
+    prompt_length = len(prompt.split())
+    adjusted_length = max(500, prompt_length + 200)  # Ensure enough tokens for response
+    
+    result = generator.generate_code(prompt, max_length=adjusted_length)
     monitor.end("code_generation")
     return result
 
