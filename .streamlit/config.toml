@@ -10,8 +10,6 @@ font = "sans serif"
 
 # Server configurations
 [server]
-port = 8501
-address = "0.0.0.0"
 maxUploadSize = 200
 enableCORS = true
 enableXsrfProtection = false
@@ -20,8 +18,6 @@ runOnSave = true
 # Browser configurations
 [browser]
 gatherUsageStats = false
-serverAddress = "localhost"
-serverPort = 8501
 
 # Runner configurations
 [runner]
@@ -37,13 +33,3 @@ toolbarMode = "auto"
 [logger]
 level = "info"
 messageFormat = "%(asctime)s %(message)s"
-
-# Development-specific settings
-[deprecation]
-showfileUploaderEncoding = false
-
-[global]
-developmentMode = true
-
-[server.fileWatcherType]
-type = "auto"
