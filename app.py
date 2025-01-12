@@ -73,23 +73,18 @@ def init_components() -> Tuple[DocumentDatabase, CodeGenerator]:
         return None, None
 
 @st.cache_data(ttl=300)
-def get_similar_docs(db, query: str, k: int = 3):
+def get_similar_docs(_db, query: str, k: int = 3):
     """Cache similarity search results"""
     monitor.start("similarity_search")
-    docs = db.similarity_search(query, k=k)
+    docs = _db.similarity_search(query, k=k)
     monitor.end("similarity_search")
     return docs
 
 @st.cache_data(ttl=300)
-def generate_code_cached(generator, prompt: str, max_length: int):
+def generate_code_cached(_generator, prompt: str, max_length: int):
     """Cache code generation results"""
     monitor.start("code_generation")
-    
-    # Adjust max_length based on prompt length
-    prompt_length = len(prompt.split())
-    adjusted_length = max(500, prompt_length + 200)
-    
-    result = generator.generate_code(prompt, max_length=adjusted_length)
+    result = _generator.generate_code(prompt, max_length=max_length)
     monitor.end("code_generation")
     return result
 
