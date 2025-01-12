@@ -1,11 +1,10 @@
-from langchain.document_loaders import DirectoryLoader
-from langchain.document_loaders import PDFPlumberLoader, TextLoader
+from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import PDFPlumberLoader, TextLoader
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
 import os
 import logging
-import pickle
 
 class DocumentDatabase:
     def __init__(self):

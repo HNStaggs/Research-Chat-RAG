@@ -1,0 +1,11 @@
+# requirements-main.txt
+streamlit
+langchain
+langchain-community
+faiss-cpu
+sentence-transformers
+transformers
+torch
+accelerate
+safetensors
+pypdf
