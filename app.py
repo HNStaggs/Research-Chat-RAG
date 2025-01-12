@@ -7,8 +7,6 @@ import streamlit as st
 from database import DocumentDatabase
 from utils import CodeGenerator
 
-# Disable streamlit telemetry
-st.set_option('browser.gatherUsageStats', False)
 
 @st.cache_resource
 def init_components():

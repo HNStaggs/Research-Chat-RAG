@@ -1,5 +1,8 @@
 # Comprehensive config content with development settings
 # Streamlit theme configuration
+[browser]
+gatherUsageStats = false
+
 [theme]
 base = "light"
 primaryColor = "#F63366"
@@ -8,28 +11,15 @@ secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 font = "sans serif"
 
-# Server configurations
 [server]
 maxUploadSize = 200
 enableCORS = true
 enableXsrfProtection = false
 runOnSave = true
 
-# Browser configurations
-[browser]
-gatherUsageStats = false
-
-# Runner configurations
-[runner]
-magicEnabled = true
-fastReruns = true
-
-# Client configurations
 [client]
 showErrorDetails = true
 toolbarMode = "auto"
 
-# Logger configurations
 [logger]
 level = "info"
-messageFormat = "%(asctime)s %(message)s"
