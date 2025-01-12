@@ -3,14 +3,20 @@ import logging
 import time
 from typing import Tuple
 import psutil
-import torch
-import GPUtil
-from contextlib import nullcontext
+import warnings
+from contextlib import nullcontext, contextmanager
 
 # Set offline environment variables
 os.environ['HF_HUB_OFFLINE'] = '1'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 
+# Suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*torch.classes.*")
+
+# Import torch after setting warnings
+import torch
+import GPUtil
 import streamlit as st
 from database import DocumentDatabase
 from utils import CodeGenerator, PerformanceMonitor, clear_memory, GPUManager
@@ -24,6 +30,44 @@ logging.basicConfig(
 
 # Initialize performance monitor
 monitor = PerformanceMonitor()
+
+@contextmanager
+def suppress_warnings():
+    """Context manager to suppress warnings"""
+    logging.getLogger("transformers").setLevel(logging.ERROR)
+    warnings.filterwarnings("ignore")
+    yield
+    logging.getLogger("transformers").setLevel(logging.WARNING)
+
+def configure_torch():
+    """Configure PyTorch settings"""
+    if torch.cuda.is_available():
+        # Configure CUDA settings
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        
+        # Set default tensor type
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+        
+        # Clear cache
+        torch.cuda.empty_cache()
+        
+        return {
+            "device": "cuda",
+            "device_name": torch.cuda.get_device_name(0),
+            "cuda_version": torch.version.cuda,
+            "gpu_available": True
+        }
+    else:
+        torch.set_default_tensor_type('torch.FloatTensor')
+        return {
+            "device": "cpu",
+            "device_name": "CPU",
+            "cuda_version": None,
+            "gpu_available": False
+        }
 
 def get_system_stats():
     """Get current system statistics including GPU"""
@@ -57,10 +101,18 @@ def init_components() -> Tuple[DocumentDatabase, CodeGenerator]:
     try:
         monitor.start("init_components")
         
-        # Clear GPU memory before initialization
+        # Configure torch
         if torch.cuda.is_available():
-            GPUManager.clear_memory()
+            # Set up CUDA device
+            torch.cuda.empty_cache()
+            torch.backends.cudnn.benchmark = True
+            device = torch.device("cuda")
+            logging.info(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
+        else:
+            device = torch.device("cpu")
+            logging.info("Using CPU device")
         
+        # Initialize components
         db = DocumentDatabase().create_or_load_db()
         generator = CodeGenerator()
         
@@ -89,6 +141,9 @@ def generate_code_cached(_generator, prompt: str, max_length: int):
     return result
 
 def main():
+    # Configure PyTorch
+    torch_config = configure_torch()
+    
     # Page configuration
     st.set_page_config(
         page_title="Code Assistant",
@@ -99,9 +154,10 @@ def main():
     
     monitor.start("app_startup")
     
-    if torch.cuda.is_available():
-        st.sidebar.success(f"🚀 GPU Accelerated: {torch.cuda.get_device_name(0)}")
-        st.sidebar.info(f"CUDA Version: {torch.version.cuda}")
+    # Display device information
+    if torch_config["gpu_available"]:
+        st.sidebar.success(f"🚀 GPU Accelerated: {torch_config['device_name']}")
+        st.sidebar.info(f"CUDA Version: {torch_config['cuda_version']}")
     else:
         st.sidebar.warning("⚠️ Running on CPU (No GPU Detected)")
     
@@ -176,7 +232,7 @@ def main():
     if generate_button and user_query:
         try:
             # Clear GPU memory before generation
-            if torch.cuda.is_available():
+            if torch_config["gpu_available"]:
                 GPUManager.clear_memory()
             
             # Search documentation
@@ -226,7 +282,7 @@ Please generate code that follows best practices and includes comments.
                         st.text(doc.page_content)
             
             # Clear GPU memory after generation
-            if torch.cuda.is_available():
+            if torch_config["gpu_available"]:
                 GPUManager.clear_memory()
             
         except Exception as e:
@@ -251,7 +307,8 @@ Please generate code that follows best practices and includes comments.
 
 if __name__ == "__main__":
     try:
-        main()
+        with suppress_warnings():
+            main()
     except Exception as e:
         logging.error(f"Application error: {str(e)}")
         st.error("An unexpected error occurred. Please check the logs for details.")
