@@ -49,9 +49,13 @@ class CodeGenerator:
     def __init__(self):
         self.model_name = "./models/santacoder"
         
-        # CUDA setup
+        # Updated CUDA setup
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.dtype = torch.float16 if self.device == "cuda" else torch.float32
+        
+        # Suppress torch.classes warning
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
         
         logging.info(f"Initializing CodeGenerator on {self.device}")
         if self.device == "cuda":

@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import DirectoryLoader
 from langchain_community.document_loaders import PDFPlumberLoader
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
@@ -9,8 +9,13 @@ import chardet
 import pickle
 import time
 import torch
+import warnings
 from typing import List, Optional, Dict, Any
 from langchain_core.documents import Document
+
+# Suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Configure logging
 logging.basicConfig(
@@ -50,7 +55,7 @@ class CustomTextLoader:
 
 class DocumentDatabase:
     """Manages document loading, processing, and vector storage with GPU support"""
-
+    
     def __init__(self):
         self.cache_dir = "./cache"
         self.models_dir = "./models"
@@ -61,17 +66,11 @@ class DocumentDatabase:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f"Using device: {self.device}")
         
-        # Initialize embeddings with GPU support - fixed duplicate cache_folder
+        # Initialize embeddings with GPU support
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="./models/sentence-transformer",
-            model_kwargs={
-                'device': self.device,
-                'cache_folder': os.path.join(self.models_dir, "cache")
-            },
-            encode_kwargs={
-                'device': self.device,
-                'batch_size': 32 if self.device == "cuda" else 8
-            }
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={'device': self.device},
+            encode_kwargs={'device': self.device, 'batch_size': 32 if self.device == "cuda" else 8}
         )
         
         self.index_file = "faiss_index"
