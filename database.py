@@ -50,7 +50,7 @@ class CustomTextLoader:
 
 class DocumentDatabase:
     """Manages document loading, processing, and vector storage with GPU support"""
-    
+
     def __init__(self):
         self.cache_dir = "./cache"
         self.models_dir = "./models"
@@ -61,14 +61,13 @@ class DocumentDatabase:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f"Using device: {self.device}")
         
-        # Initialize embeddings with GPU support
+        # Initialize embeddings with GPU support - fixed duplicate cache_folder
         self.embeddings = HuggingFaceEmbeddings(
             model_name="./models/sentence-transformer",
             model_kwargs={
                 'device': self.device,
                 'cache_folder': os.path.join(self.models_dir, "cache")
             },
-            cache_folder=os.path.join(self.models_dir, "cache"),
             encode_kwargs={
                 'device': self.device,
                 'batch_size': 32 if self.device == "cuda" else 8
