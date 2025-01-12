@@ -11,3 +11,4 @@ safetensors
 pypdf
 chardet
 pdfplumber
+gputil

@@ -8,7 +8,8 @@ import logging
 import chardet
 import pickle
 import time
-from typing import List, Optional
+import torch
+from typing import List, Optional, Dict, Any
 from langchain_core.documents import Document
 
 # Configure logging
@@ -41,14 +42,14 @@ class CustomTextLoader:
                 with open(self.file_path, 'r', encoding=encoding) as file:
                     text = file.read()
             except Exception as e:
-                logging.error(f"Error loading {self.file_path}: {str(e)}")
+                logging.error(f"Could not load {self.file_path}: {str(e)}")
                 raise RuntimeError(f"Could not load {self.file_path}: {str(e)}")
         
         metadata = {"source": self.file_path}
         return [Document(page_content=text, metadata=metadata)]
 
 class DocumentDatabase:
-    """Manages document loading, processing, and vector storage"""
+    """Manages document loading, processing, and vector storage with GPU support"""
     
     def __init__(self):
         self.cache_dir = "./cache"
@@ -56,20 +57,32 @@ class DocumentDatabase:
         os.makedirs(self.cache_dir, exist_ok=True)
         os.makedirs(self.models_dir, exist_ok=True)
         
+        # Set up GPU/CPU device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        logging.info(f"Using device: {self.device}")
+        
+        # Initialize embeddings with GPU support
         self.embeddings = HuggingFaceEmbeddings(
             model_name="./models/sentence-transformer",
             model_kwargs={
-                'device': 'cpu',
+                'device': self.device,
                 'cache_folder': os.path.join(self.models_dir, "cache")
             },
-            cache_folder=os.path.join(self.models_dir, "cache")
+            cache_folder=os.path.join(self.models_dir, "cache"),
+            encode_kwargs={
+                'device': self.device,
+                'batch_size': 32 if self.device == "cuda" else 8
+            }
         )
+        
         self.index_file = "faiss_index"
         self.doc_cache_file = os.path.join(self.cache_dir, "doc_cache.pkl")
         
         # Configure chunk settings
         self.chunk_size = 1000
         self.chunk_overlap = 200
+        
+        logging.info("DocumentDatabase initialized")
 
     def load_pdf(self, file_path: str) -> List[Document]:
         """Load and process a PDF file"""
@@ -88,6 +101,8 @@ class DocumentDatabase:
                     return pickle.load(f)
             except Exception as e:
                 logging.warning(f"Failed to load cache: {str(e)}")
+                if os.path.exists(self.doc_cache_file):
+                    os.remove(self.doc_cache_file)
                 return None
         return None
 
@@ -96,6 +111,7 @@ class DocumentDatabase:
         try:
             with open(self.doc_cache_file, 'wb') as f:
                 pickle.dump(documents, f)
+            logging.info(f"Cached {len(documents)} documents")
         except Exception as e:
             logging.error(f"Failed to cache documents: {str(e)}")
 
@@ -137,18 +153,17 @@ class DocumentDatabase:
                     else:
                         continue
                     
-                    documents.extend(docs)
-                    processed_count += 1
-                    logging.info(f"Processed {processed_count}/{doc_count}: {file}")
+                    if docs:
+                        documents.extend(docs)
+                        processed_count += 1
+                        logging.info(f"Processed {processed_count}/{doc_count}: {file}")
+                    else:
+                        errors.append(f"No content extracted from {file}")
                     
                 except Exception as e:
                     error_msg = f"Error loading {file}: {str(e)}"
                     errors.append(error_msg)
                     logging.error(error_msg)
-        
-        if errors:
-            error_msg = "\n".join(errors)
-            raise ValueError(f"Errors loading some documents:\n{error_msg}")
         
         if not documents:
             raise ValueError("No content could be extracted from the documents. Please check file formats and contents.")
@@ -168,6 +183,9 @@ class DocumentDatabase:
         
         processing_time = time.time() - start_time
         logging.info(f"Document processing completed in {processing_time:.2f} seconds")
+        
+        if errors:
+            logging.warning("Processed with errors:\n" + "\n".join(errors))
         
         return texts
 
@@ -224,14 +242,15 @@ class DocumentDatabase:
             logging.error(error_msg)
             raise ValueError(error_msg)
 
-    def get_database_stats(self):
+    def get_database_stats(self) -> Dict[str, Any]:
         """Get statistics about the database"""
         try:
             stats = {
                 "total_documents": 0,
                 "file_types": {"pdf": 0, "txt": 0},
                 "total_chunks": 0,
-                "database_size": 0
+                "database_size_mb": 0,
+                "device": self.device
             }
             
             # Count documents
@@ -246,10 +265,24 @@ class DocumentDatabase:
             
             # Get database size
             if os.path.exists(f"{self.index_file}.faiss"):
-                stats["database_size"] = os.path.getsize(f"{self.index_file}.faiss") / (1024 * 1024)  # Size in MB
+                stats["database_size_mb"] = os.path.getsize(f"{self.index_file}.faiss") / (1024 * 1024)
+            
+            # Get memory usage if using GPU
+            if self.device == "cuda":
+                stats["gpu_memory_allocated_mb"] = torch.cuda.memory_allocated() / (1024 * 1024)
+                stats["gpu_memory_reserved_mb"] = torch.cuda.memory_reserved() / (1024 * 1024)
             
             return stats
             
         except Exception as e:
             logging.error(f"Error getting database stats: {str(e)}")
-            return None
+            return {"error": str(e)}
+
+    def cleanup(self):
+        """Cleanup resources"""
+        try:
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+            logging.info("Database cleanup completed")
+        except Exception as e:
+            logging.error(f"Error during cleanup: {str(e)}")

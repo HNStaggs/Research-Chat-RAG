@@ -4,6 +4,8 @@ import time
 from typing import Tuple
 import psutil
 import torch
+import GPUtil
+from contextlib import nullcontext
 
 # Set offline environment variables
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -11,7 +13,7 @@ os.environ['TRANSFORMERS_OFFLINE'] = '1'
 
 import streamlit as st
 from database import DocumentDatabase
-from utils import CodeGenerator, PerformanceMonitor, clear_memory
+from utils import CodeGenerator, PerformanceMonitor, clear_memory, GPUManager
 
 # Configure logging
 logging.basicConfig(
@@ -23,32 +25,41 @@ logging.basicConfig(
 # Initialize performance monitor
 monitor = PerformanceMonitor()
 
-def print_resource_usage():
-    """Monitor and display system resource usage"""
-    process = psutil.Process()
-    memory_info = process.memory_info()
+def get_system_stats():
+    """Get current system statistics including GPU"""
+    stats = {}
     
-    metrics = {
-        "Memory Usage (MB)": f"{memory_info.rss / 1024 / 1024:.1f}",
-        "CPU Usage (%)": f"{process.cpu_percent()}",
-        "Active Threads": f"{process.num_threads()}"
-    }
+    # GPU Stats
+    if torch.cuda.is_available():
+        try:
+            gpu = GPUtil.getGPUs()[0]
+            stats.update({
+                "GPU Device": torch.cuda.get_device_name(0),
+                "GPU Memory": f"{gpu.memoryUsed:.0f}MB / {gpu.memoryTotal:.0f}MB",
+                "GPU Util": f"{gpu.load*100:.1f}%",
+                "CUDA Ver": torch.version.cuda
+            })
+        except Exception as e:
+            logging.error(f"Error getting GPU stats: {e}")
+            stats.update({"GPU Error": str(e)})
     
-    return metrics
-
-
+    # CPU Stats
+    stats.update({
+        "CPU Usage": f"{psutil.cpu_percent()}%",
+        "RAM Usage": f"{psutil.virtual_memory().percent}%"
+    })
+    
+    return stats
 
 @st.cache_resource(ttl=3600)
-def init_components():
+def init_components() -> Tuple[DocumentDatabase, CodeGenerator]:
     """Initialize and cache the main components"""
     try:
         monitor.start("init_components")
         
-        # Check if CUDA is available
+        # Clear GPU memory before initialization
         if torch.cuda.is_available():
-            st.sidebar.success("🚀 GPU acceleration available")
-        else:
-            st.sidebar.info("💻 Running on CPU mode")
+            GPUManager.clear_memory()
         
         db = DocumentDatabase().create_or_load_db()
         generator = CodeGenerator()
@@ -58,14 +69,10 @@ def init_components():
         
     except Exception as e:
         logging.error(f"Error initializing components: {str(e)}")
-        st.error(f"""
-        Error initializing components: {str(e)}
-        
-        This app is running in CPU-only mode. Performance might be slower.
-        """)
+        st.error(f"Error initializing components: {str(e)}")
         return None, None
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300)
 def get_similar_docs(db, query: str, k: int = 3):
     """Cache similarity search results"""
     monitor.start("similarity_search")
@@ -73,22 +80,21 @@ def get_similar_docs(db, query: str, k: int = 3):
     monitor.end("similarity_search")
     return docs
 
-
 @st.cache_data(ttl=300)
 def generate_code_cached(generator, prompt: str, max_length: int):
-    """Cache code generation results with proper length handling"""
+    """Cache code generation results"""
     monitor.start("code_generation")
     
     # Adjust max_length based on prompt length
     prompt_length = len(prompt.split())
-    adjusted_length = max(500, prompt_length + 200)  # Ensure enough tokens for response
+    adjusted_length = max(500, prompt_length + 200)
     
     result = generator.generate_code(prompt, max_length=adjusted_length)
     monitor.end("code_generation")
     return result
 
 def main():
-    monitor.start("app_startup")
+    # Page configuration
     st.set_page_config(
         page_title="Code Assistant",
         page_icon="💻",
@@ -96,7 +102,15 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    st.title("Code Assistant (Optimized Mode)")
+    monitor.start("app_startup")
+    
+    if torch.cuda.is_available():
+        st.sidebar.success(f"🚀 GPU Accelerated: {torch.cuda.get_device_name(0)}")
+        st.sidebar.info(f"CUDA Version: {torch.version.cuda}")
+    else:
+        st.sidebar.warning("⚠️ Running on CPU (No GPU Detected)")
+    
+    st.title("Code Assistant (GPU Accelerated)")
     
     # Initialize components with loading indicator
     with st.spinner("Loading AI models..."):
@@ -107,8 +121,15 @@ def main():
     
     # Sidebar for settings and monitoring
     with st.sidebar:
-        st.info("🔒 Running in offline mode")
+        # System monitoring
+        st.header("System Monitor")
+        if st.checkbox("Show System Stats", value=False):
+            stats_placeholder = st.empty()
+            stats = get_system_stats()
+            stats_text = "\n".join([f"{k}: {v}" for k, v in stats.items()])
+            stats_placeholder.text(stats_text)
         
+        # Settings
         st.header("Settings")
         language = st.selectbox(
             "Programming Language",
@@ -123,13 +144,6 @@ def main():
             step=50
         )
         
-        # Performance monitoring section
-        st.header("Performance Metrics")
-        if st.checkbox("Show Performance Metrics", value=False):
-            metrics = print_resource_usage()
-            for metric_name, value in metrics.items():
-                st.text(f"{metric_name}: {value}")
-        
         # Database management
         st.header("Database Management")
         if st.button("Refresh Documentation Database"):
@@ -139,11 +153,12 @@ def main():
                     db = DocumentDatabase().refresh_database()
                     monitor.end("refresh_database")
                 st.success("Database refreshed successfully!")
-                clear_memory()  # Clear memory after refresh
+                if torch.cuda.is_available():
+                    GPUManager.clear_memory()
             except Exception as e:
                 logging.error(f"Error refreshing database: {str(e)}")
                 st.error(f"Error refreshing database: {str(e)}")
-
+    
     # Main interface
     st.header("Code Generation")
     
@@ -165,6 +180,10 @@ def main():
     
     if generate_button and user_query:
         try:
+            # Clear GPU memory before generation
+            if torch.cuda.is_available():
+                GPUManager.clear_memory()
+            
             # Search documentation
             with st.spinner("Searching documentation..."):
                 docs = get_similar_docs(db, user_query)
@@ -211,8 +230,9 @@ Please generate code that follows best practices and includes comments.
                         st.markdown(f"**Reference {i}:**")
                         st.text(doc.page_content)
             
-            # Clear memory after generation
-            clear_memory()
+            # Clear GPU memory after generation
+            if torch.cuda.is_available():
+                GPUManager.clear_memory()
             
         except Exception as e:
             logging.error(f"Error during code generation: {str(e)}")
@@ -223,7 +243,7 @@ Please generate code that follows best practices and includes comments.
     st.markdown(
         """
         <div style='text-align: center'>
-            <p>Code Assistant - Optimized Mode</p>
+            <p>Code Assistant - GPU Accelerated Mode</p>
             <p style='color: gray; font-size: 0.8em;'>
                 Using local models for offline code generation
             </p>
