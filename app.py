@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Tuple
 import psutil
+import torch
 
 # Set offline environment variables
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -35,7 +36,7 @@ def print_resource_usage():
     
     return metrics
 
-# In app.py, update the init_components function:
+
 
 @st.cache_resource(ttl=3600)
 def init_components():
@@ -72,7 +73,6 @@ def get_similar_docs(db, query: str, k: int = 3):
     monitor.end("similarity_search")
     return docs
 
-# Update the generate_code_cached function:
 
 @st.cache_data(ttl=300)
 def generate_code_cached(generator, prompt: str, max_length: int):
