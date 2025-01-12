@@ -9,3 +9,5 @@ torch
 accelerate
 safetensors
 pypdf
+chardet
+pdfplumber
