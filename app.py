@@ -103,7 +103,6 @@ def init_components() -> Tuple[DocumentDatabase, CodeGenerator]:
         
         # Configure torch
         if torch.cuda.is_available():
-            # Set up CUDA device
             torch.cuda.empty_cache()
             torch.backends.cudnn.benchmark = True
             device = torch.device("cuda")
@@ -133,10 +132,32 @@ def get_similar_docs(_db, query: str, k: int = 3):
     return docs
 
 @st.cache_data(ttl=300)
-def generate_code_cached(_generator, prompt: str, max_length: int):
+def generate_code_cached(_generator, prompt: str, max_length: int, language: str):
     """Cache code generation results"""
     monitor.start("code_generation")
-    result = _generator.generate_code(prompt, max_length=max_length)
+    
+    # Create a structured prompt
+    structured_prompt = f"""
+Task: Create {language} code for the following requirement:
+{prompt}
+
+Requirements:
+1. Use clean, readable {language} code
+2. Include comprehensive comments
+3. Follow {language} best practices
+4. Implement proper error handling
+5. Use meaningful variable/function names
+
+Additional Context:
+- Code should be well-structured and maintainable
+- Include necessary imports/dependencies
+- Add input validation where appropriate
+- Consider edge cases
+
+Please provide the implementation below:
+"""
+    
+    result = _generator.generate_code(structured_prompt, max_length, language)
     monitor.end("code_generation")
     return result
 
@@ -204,7 +225,7 @@ def main():
                     db = DocumentDatabase().refresh_database()
                     monitor.end("refresh_database")
                 st.success("Database refreshed successfully!")
-                if torch.cuda.is_available():
+                if torch_config["gpu_available"]:
                     GPUManager.clear_memory()
             except Exception as e:
                 logging.error(f"Error refreshing database: {str(e)}")
@@ -240,20 +261,29 @@ def main():
                 docs = get_similar_docs(db, user_query)
                 context = "\n".join([doc.page_content for doc in docs])
             
-            # Create prompt
+            # Create prompt with context
             prompt = f"""
-Language: {language}
-Task: {user_query}
+Based on the following documentation and requirements:
 
-Reference Documentation:
+Documentation Reference:
 {context}
 
-Please generate code that follows best practices and includes comments.
+User Request:
+{user_query}
+
+Technical Requirements:
+1. Language: {language}
+2. Include error handling
+3. Add input validation
+4. Use proper documentation
+5. Follow coding standards
+
+Please generate a complete, well-documented solution.
 """
             
             # Generate code
             with st.spinner("Generating code..."):
-                generated_code = generate_code_cached(generator, prompt, max_length)
+                generated_code = generate_code_cached(generator, prompt, max_length, language)
                 
                 st.subheader("Generated Code")
                 st.code(generated_code, language=language.lower())
@@ -266,10 +296,23 @@ Please generate code that follows best practices and includes comments.
             # Generate explanation if requested
             if include_explanation:
                 with st.spinner("Generating explanation..."):
+                    explanation_prompt = f"""
+Explain this {language} code in detail:
+
+{generated_code}
+
+Focus on:
+1. Overall purpose and functionality
+2. Key components and their interactions
+3. Important implementation details
+4. Error handling and edge cases
+5. Any assumptions or limitations
+"""
                     explanation = generate_code_cached(
                         generator,
-                        f"Explain this {language} code:\n{generated_code}",
-                        max_length=300
+                        explanation_prompt,
+                        300,
+                        language
                     )
                     st.subheader("Code Explanation")
                     st.write(explanation)
