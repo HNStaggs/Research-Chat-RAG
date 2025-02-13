@@ -1,4 +1,4 @@
-![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.13+-blue.svg)
 ![CUDA](https://img.shields.io/badge/CUDA-12.4+-green.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1+-orange.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.41.1-red.svg)
@@ -19,7 +19,7 @@ A GPU-accelerated code generation assistant that uses local LLMs and RAG (Retrie
   
 
 ## System Requirements
-- Python 3.9+
+- Python 3.13+
 - CUDA-capable GPU (tested with RTX A2000 8GB)
 - 16GB+ RAM recommended
 - Windows/Linux/MacOS  # Initially built on Windows
@@ -99,11 +99,10 @@ A GPU-accelerated code generation assistant that uses local LLMs and RAG (Retrie
 * Performance monitoring
 * System statistics
 
-## 🛠️  Model Configuration
-* Adjust model parameters in utils.py
-"""temperature = 0.4
-top_p = 0.85
-top_k = 50"""
+## 🛠️  Model Configuration: Adjust model parameters in utils.py
+* temperature = 0.4
+* top_p = 0.85
+* top_k = 50
 
 ## ⚠️ Limitations & Issues
 * Processing speed depends on your hardware capabilities and the latest CUDA driver support
