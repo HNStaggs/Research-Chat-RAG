@@ -1,6 +1,7 @@
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
-![CUDA](https://img.shields.io/badge/CUDA-11.8+-green.svg)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)
+![CUDA](https://img.shields.io/badge/CUDA-12.4+-green.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.41.1-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
