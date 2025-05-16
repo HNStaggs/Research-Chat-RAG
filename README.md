@@ -47,34 +47,77 @@ research-chat-rag/
 └── README.md           # Project documentation
 ```
 
+## Prerequisites
+
+- Python 3.13+
+- PostgreSQL 12+ with admin access
+- Git
+- pip (Python package installer)
+
 ## Setup
 
-1. Create a PostgreSQL database and install the pgvector extension:
-```sql
-CREATE DATABASE research_chat;
-\c research_chat
-CREATE EXTENSION vector;
-```
-
-2. Create a `.env` file with your configuration:
-```
-ANTHROPIC_API_KEY=your_claude_api_key_here
-NCBI_API_KEY=your_ncbi_api_key_here
-ENTREZ_EMAIL=your_email@example.com
-DATABASE_URL=postgresql://username:password@localhost:5432/research_chat
-```
-
-3. Create a Virtual Environment in Project Directory and Install dependencies:
+1. Clone the repository:
 ```bash
+git clone https://github.com/yourusername/research-chat-rag.git
+cd research-chat-rag
+```
+
+2. Create and activate a virtual environment:
+```bash
+# Windows
 python -m venv .venv
-cd .venv\Scripts\activate # Windows activate environment
+.venv\Scripts\activate
+
+# Linux/MacOS
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-4. Run the application:
+4. Set up PostgreSQL database:
+```sql
+# Connect to PostgreSQL as admin
+psql -U postgres
+
+# Create database and extension
+CREATE DATABASE research_chat;
+\c research_chat
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+5. Get required API keys:
+   - Claude API key from [Anthropic Console](https://console.anthropic.com/)
+   - NCBI/PubMed API key from [NCBI Account Settings](https://www.ncbi.nlm.nih.gov/account/settings/)
+
+6. Create environment file:
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env with your values
+# ANTHROPIC_API_KEY=your_claude_api_key_here
+# NCBI_API_KEY=your_ncbi_api_key_here
+# ENTREZ_EMAIL=your_email@example.com
+# DATABASE_URL=postgresql://username:password@localhost:5432/research_chat
+```
+
+7. Initialize the database:
+```bash
+# The database tables will be created on first run
+```
+
+8. Run the application:
 ```bash
 chainlit run src/api/app.py
 ```
+
+9. Access the application:
+   - Open your browser and navigate to `http://localhost:8000`
+   - The first run will take longer as it downloads required models
 
 ## Environment Variables
 
