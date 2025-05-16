@@ -95,7 +95,6 @@ tenacity==9.0.0
 threadpoolctl==3.5.0
 tokenizers==0.21.0
 toml==0.10.2
-torch==2.5.1+cu124
 torchaudio==2.5.1+cu124
 torchvision==0.20.1+cu124
 tornado==6.4.2
@@ -107,3 +106,9 @@ tzdata==2024.2
 urllib3==2.3.0
 watchdog==6.0.0
 yarl==1.18.3
+chainlit==1.0.0
+anthropic==0.18.1
+biopython==1.83
+psycopg2-binary==2.9.9
+pgvector==0.2.5
+alembic==1.13.1
