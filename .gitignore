@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+.env*
 !.env.example
 
 # Python
@@ -125,3 +126,60 @@ docker-compose.override.yml
 *.key
 *.cert
 *.crt
+
+# HR Metrics Data
+*.csv
+*.xlsx
+*.xls
+reports/
+analytics/
+benchmarks/
+dashboards/
+hr_metrics_cache/
+metrics_data/
+analytics_cache/
+benchmark_data/
+
+# Azure
+.azure/
+*.publishsettings
+
+# Pinecone
+.pinecone/
+vector_cache/ 
+
+
+# Pinecone
+.pinecone/
+vector_cache/
+
+# Security
+*.p12
+*.pfx 
+
+# VS Code specific
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Windows specific
+$RECYCLE.BIN/
+
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/ 

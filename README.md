@@ -8,49 +8,68 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# Research Chat RAG
+# HR Personnel Analytics Agent
 
-A powerful research assistant that combines PubMed paper search with RAG (Retrieval-Augmented Generation) capabilities using Claude AI.
+An intelligent HR analyst that combines PubMed data analysis, vector search, and data visualization capabilities using LangChain/LangGraph agents.
 
 ## Features
 
-- Real-time PubMed paper search and analysis
-- Vector-based similarity search for relevant papers
-- PostgreSQL storage with pgvector for efficient vector operations
-- Claude AI integration for intelligent responses
-- Citation management and formatting
-- GPU acceleration support
+1. **Research Analysis**
+   - PubMed paper search and analysis
+   - Automatic metadata extraction
+   - Citation generation
+   - Vector similarity search using Pinecone
+
+2. **Data Analysis & Visualization**
+   - Dataset upload and storage in Azure Blob Storage
+   - Interactive data visualization using Plotly
+   - Statistical analysis and insights
+   - Support for multiple graph types:
+     - Line graphs
+     - Bar charts
+     - Scatter plots
+     - Histograms
+     - Box plots
+
+3. **Agent Architecture**
+   - Research Agent for paper analysis
+   - Data Analysis Agent for visualization
+   - LangGraph-based workflow management
+   - Tool-based architecture for extensibility
+
+4. **Azure Integration**
+   - Azure Functions deployment
+   - Azure Blob Storage for datasets
+   - Managed identity and security
+   - CI/CD pipeline with GitHub Actions
 
 ## Project Structure
 
 ```
-research-chat-rag/
-├── src/                    # Source code
-│   ├── api/               # API endpoints and main application
-│   │   └── app.py        # Main Chainlit application
-│   ├── config/           # Configuration management
-│   │   └── settings.py   # Settings and environment variables
-│   ├── database/         # Database management
-│   │   └── init_db.py    # Database initialization
-│   ├── models/           # Database models
-│   │   └── pubmed.py     # PubMed article models
-│   ├── services/         # Business logic
-│   │   └── pubmed_service.py  # PubMed interaction service
-│   └── utils/            # Utility functions
-│       └── memory.py     # Memory management utilities
-├── tests/                # Test files
-│   ├── unit/            # Unit tests
-│   └── integration/     # Integration tests
-├── config/              # Configuration files
-├── .env.example         # Example environment variables
-├── requirements.txt     # Project dependencies
-└── README.md           # Project documentation
+src/
+├── agents/                # Agent definitions
+│   ├── base_agent.py
+│   ├── research_agent.py
+│   └── data_analysis_agent.py
+├── chains/               # LangGraph workflows
+│   └── research_chain.py
+├── tools/               # LangChain tools
+│   ├── pubmed_tool.py
+│   ├── pinecone_tool.py
+│   └── data_analysis_tool.py
+├── api/                 # API endpoints
+│   └── azure_function.py
+├── config/             # Configuration
+├── database/          # Database management
+├── models/           # Data models
+└── utils/           # Utility functions
 ```
 
 ## Prerequisites
 
-- Python 3.13+
-- PostgreSQL 12+ with admin access
+- Python 3.11+
+- Azure subscription
+- PostgreSQL 12+ (for metadata storage)
 - Git
 - pip (Python package installer)
 
@@ -78,78 +97,88 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Set up PostgreSQL database:
-```sql
-# Connect to PostgreSQL as admin
-psql -U postgres
-
-# Create database and extension
-CREATE DATABASE research_chat;
-\c research_chat
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-5. Get required API keys:
-   - Claude API key from [Anthropic Console](https://console.anthropic.com/)
-   - NCBI/PubMed API key from [NCBI Account Settings](https://www.ncbi.nlm.nih.gov/account/settings/)
-
-6. Create environment file:
+4. Set up environment variables:
 ```bash
 # Copy example environment file
 cp .env.example .env
 
 # Edit .env with your values
-# ANTHROPIC_API_KEY=your_claude_api_key_here
-# NCBI_API_KEY=your_ncbi_api_key_here
-# ENTREZ_EMAIL=your_email@example.com
-# DATABASE_URL=postgresql://username:password@localhost:5432/research_chat
+ANTHROPIC_API_KEY=your_claude_api_key_here
+NCBI_API_KEY=your_ncbi_api_key_here
+ENTREZ_EMAIL=your_email@example.com
+PINECONE_API_KEY=your_pinecone_api_key_here
+PINECONE_ENVIRONMENT=your_pinecone_environment
+AZURE_STORAGE_CONNECTION_STRING=your_azure_storage_connection_string
 ```
 
-7. Initialize the database:
+5. Deploy to Azure:
 ```bash
-# The database tables will be created on first run
+# Login to Azure
+az login
+
+# Create resource group
+az group create --name research-chat-rg --location eastus
+
+# Deploy using Bicep
+az deployment group create \
+  --resource-group research-chat-rg \
+  --template-file azure/main.bicep \
+  --parameters functionAppName=your-function-app-name \
+  --parameters storageAccountName=yourstorageaccount \
+  --parameters appServicePlanName=your-app-service-plan
 ```
 
-8. Run the application:
-```bash
-chainlit run src/api/app.py
+## API Usage
+
+### Research Analysis
+```http
+POST /api/analyze
+Content-Type: application/json
+{
+    "type": "research",
+    "query": "What are the latest developments in cancer immunotherapy?"
+}
 ```
 
-9. Access the application:
-   - Open your browser and navigate to `http://localhost:8000`
-   - The first run will take longer as it downloads required models
+### Data Analysis
+1. Upload dataset:
+```http
+POST /api/upload
+Content-Type: multipart/form-data
+file: your_dataset.csv
+```
 
-## Environment Variables
+2. Request analysis:
+```http
+POST /api/analyze
+Content-Type: application/json
+{
+    "type": "data_analysis",
+    "blob_name": "uploaded_file_name",
+    "request": "Create a line graph showing sales trends over time"
+}
+```
 
-- `ANTHROPIC_API_KEY`: Your Claude API key
-- `NCBI_API_KEY`: Your NCBI/PubMed API key
-- `ENTREZ_EMAIL`: Email for PubMed API access
-- `DATABASE_URL`: PostgreSQL connection string
-- `EMBEDDING_MODEL`: Model for generating embeddings (default: sentence-transformers/all-mpnet-base-v2)
-- `TEMPERATURE`: Temperature for Claude responses (default: 0.7)
-- `MAX_TOKENS`: Maximum tokens for responses (default: 2000)
+## Development
 
-## Features
+### Adding New Agents
+1. Create a new agent class in `src/agents/`
+2. Implement required tools in `src/tools/`
+3. Add agent to the appropriate chain in `src/chains/`
 
-1. **PubMed Integration**
-   - Real-time paper search
-   - Automatic metadata extraction
-   - Citation generation
+### Adding New Tools
+1. Create a new tool class in `src/tools/`
+2. Decorate with `@tool`
+3. Implement the `run` method
+4. Add to the appropriate agent
 
-2. **Vector Search**
-   - Efficient similarity search using pgvector
-   - Automatic embedding generation
-   - Hybrid search capabilities
+## CI/CD Pipeline
 
-3. **Claude AI Integration**
-   - Context-aware responses
-   - Citation inclusion
-   - Natural language understanding
-
-4. **Database Management**
-   - PostgreSQL with vector operations
-   - Efficient data storage and retrieval
-   - Automatic schema management
+The project uses GitHub Actions for continuous integration and deployment:
+- Automatic testing on push
+- Deployment to Azure Functions
+- Environment variable management
+- Security scanning
 
 ## Contributing
 
@@ -163,10 +192,17 @@ chainlit run src/api/app.py
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Acknowledgments
+
+- Built with LangChain and LangGraph
+- Uses Azure Functions for serverless deployment
+- Powered by Claude for natural language understanding
+- Data visualization with Plotly
 
 ## 🙏 Acknowledgments/Credits
 * Built with Chainlit
 * Uses Hugging Face Transformers Apache 2.0
+* Sample HR personnel dataset from: https://www.kaggle.com/datasets/mexwell/employee-performance-and-productivity-data
 
 ### 📚 Additional Resources, Citations, and Attributes
 * [Streamlit Documentation](https://docs.streamlit.io/)
