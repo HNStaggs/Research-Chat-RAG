@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
-import numpy as np
 
 Base = declarative_base()
 

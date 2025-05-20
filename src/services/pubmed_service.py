@@ -2,16 +2,18 @@ from Bio import Entrez, Medline
 from typing import List, Dict
 from datetime import datetime
 from sqlalchemy.orm import Session
-from src.models.pubmed import PubMedArticle, ArticleEmbedding
+from src.models.pubmed import PubMedArticle
 from sentence_transformers import SentenceTransformer
+from src.services.pinecone_service import PineconeService
 
 class PubMedService:
-    def __init__(self, email: str, api_key: str, embedding_model: str = 'sentence-transformers/all-mpnet-base-v2'):
+    def __init__(self, email: str, api_key: str, pinecone_service: PineconeService, embedding_model: str = 'sentence-transformers/all-mpnet-base-v2'):
         """Initialize PubMed service"""
         self.email = email
         Entrez.email = email
         Entrez.api_key = api_key
         self.model = SentenceTransformer(embedding_model)
+        self.pinecone_service = pinecone_service
     
     def parse_pubmed_article(self, medline_record: str) -> Dict:
         """Parse PubMed article data from Medline format"""
@@ -34,7 +36,7 @@ class PubMedService:
         return f"{article_data['authors']} ({article_data['publication_date']}). {article_data['title']}. {article_data['journal']}"
     
     async def store_pubmed_data(self, articles_data: List[Dict], session: Session) -> List[PubMedArticle]:
-        """Store PubMed articles and their embeddings in the database"""
+        """Store PubMed articles in the database and their embeddings in Pinecone"""
         stored_articles = []
         
         for article_data in articles_data:
@@ -54,13 +56,20 @@ class PubMedService:
             text_for_embedding = f"{article_data['title']} {article_data['abstract']}"
             embedding = self.model.encode(text_for_embedding)
             
-            # Create embedding record
-            article_embedding = ArticleEmbedding(
-                embedding=embedding.tolist()
+            # Store in Pinecone
+            metadata = {
+                'title': article_data['title'],
+                'abstract': article_data['abstract'],
+                'authors': article_data['authors'],
+                'journal': article_data['journal'],
+                'publication_date': article_data['publication_date'],
+                'keywords': article_data['keywords']
+            }
+            self.pinecone_service.store_embeddings(
+                article_id=article_data['pmid'],
+                embedding=embedding.tolist(),
+                metadata=metadata
             )
-            
-            # Link embedding to article
-            article.embeddings = article_embedding
             
             session.add(article)
             stored_articles.append(article)
@@ -89,4 +98,17 @@ class PubMedService:
             
         except Exception as e:
             print(f"Error fetching PubMed data: {e}")
-            return [] 
+            return []
+    
+    async def search_similar_articles(self, query: str, top_k: int = 3) -> List[Dict]:
+        """Search for similar articles using vector similarity"""
+        # Generate embedding for the query
+        query_embedding = self.model.encode(query)
+        
+        # Search in Pinecone
+        similar_articles = self.pinecone_service.search_similar(
+            query_embedding=query_embedding.tolist(),
+            top_k=top_k
+        )
+        
+        return [match.metadata for match in similar_articles] 
