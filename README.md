@@ -6,6 +6,7 @@
 ![RAG](https://img.shields.io/badge/RAG-Enabled-brightgreen.svg)
 ![Gen AI](https://img.shields.io/badge/Generative_AI-Powered-blue.svg)
 ![Agents](https://img.shields.io/badge/Agents-LangChain%2FLangGraph-orange.svg)
+![Pinecone](https://img.shields.io/badge/Pinecone-Vector_DB-blueviolet.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 

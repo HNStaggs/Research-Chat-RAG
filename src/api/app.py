@@ -4,6 +4,7 @@ from anthropic import Anthropic
 import json
 import torch
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from src.config.settings import settings
 from src.database.init_db import init_db, create_vector_extension
 from src.services.pubmed_service import PubMedService
