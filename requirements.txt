@@ -54,7 +54,7 @@ jsonpatch==1.33
 jsonpointer==3.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2025.4.1
-langchain==0.1.12
+langchain==0.3.25
 langchain-community==0.3.24
 langchain-core==0.3.60
 langchain-huggingface==0.2.0
@@ -97,6 +97,7 @@ opentelemetry-instrumentation-llamaindex==0.40.6
 opentelemetry-instrumentation-logging==0.52b1
 opentelemetry-instrumentation-marqo==0.40.6
 opentelemetry-instrumentation-mcp==0.40.6
+opentelemetry-instrumentation-milvus==0.40.6
 opentelemetry-instrumentation-mistralai==0.40.6
 opentelemetry-instrumentation-ollama==0.40.6
 opentelemetry-instrumentation-openai==0.40.6
@@ -123,6 +124,7 @@ packaging==24.2
 pandas==2.2.3
 pdfminer.six==20250327
 pdfplumber==0.11.6
+pgvector==0.4.1
 pillow==11.0.0
 posthog==3.25.0
 propcache==0.3.1
@@ -173,6 +175,7 @@ tokenizers==0.21.1
 toml==0.10.2
 tomli==2.2.1
 torch==2.6.0+cu124
+torchaudio==2.6.0+cu124
 torchvision==0.21.0+cu124
 tornado==6.5
 tqdm==4.67.1
@@ -192,9 +195,3 @@ wsproto==1.2.0
 yarl==1.20.0
 zipp==3.21.0
 zstandard==0.23.0
-pinecone-client==3.0.2
-langgraph==0.0.27
-azure-functions==1.17.0
-azure-identity==1.15.0
-azure-storage-blob==12.19.0
-plotly==5.19.0
