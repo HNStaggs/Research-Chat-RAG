@@ -5,6 +5,7 @@
 ![Claude](https://img.shields.io/badge/Claude-3.0-yellow.svg)
 ![RAG](https://img.shields.io/badge/RAG-Enabled-brightgreen.svg)
 ![Gen AI](https://img.shields.io/badge/Generative_AI-Powered-blue.svg)
+![Agents](https://img.shields.io/badge/Agents-LangChain%2FLangGraph-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
