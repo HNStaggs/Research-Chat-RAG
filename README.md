@@ -74,6 +74,7 @@ src/
 - PostgreSQL 12+ (for metadata storage)
 - Git
 - pip (Python package installer)
+- LLM API (Anthropic Claude used for this demo)
 
 ## Setup
 
@@ -157,7 +158,7 @@ Content-Type: application/json
 {
     "type": "data_analysis",
     "blob_name": "uploaded_file_name",
-    "request": "Create a line graph showing sales trends over time"
+    "request": "Create a graph showing salaries for department X and department Y"
 }
 ```
 
