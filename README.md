@@ -244,15 +244,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
-
-## Documentation References
-
-### Azure Services
-- [Azure Functions Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
-- [Azure Blob Storage Documentation](https://docs.microsoft.com/en-us/azure/storage/blobs/)
-- [Azure Cognitive Search Documentation](https://docs.microsoft.com/en-us/azure/search/)
-- [Azure Key Vault Documentation](https://docs.microsoft.com/en-us/azure/key-vault/)
-
-### SDKs and APIs
-- [Azure SDK for Python](https://github.com/Azure/azure-sdk-for-python)
-- [Azure Functions Python Guide](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-python)
