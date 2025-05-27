@@ -1,4 +1,4 @@
-![Python](https://img.shields.io/badge/python-3.13+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![CUDA](https://img.shields.io/badge/CUDA-12.4+-green.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1+-orange.svg)
 ![Chainlit](https://img.shields.io/badge/Chainlit-1.0.0-purple.svg)
