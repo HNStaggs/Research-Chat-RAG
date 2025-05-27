@@ -7,6 +7,7 @@
 ![Gen AI](https://img.shields.io/badge/Generative_AI-Powered-blue.svg)
 ![Agents](https://img.shields.io/badge/Agents-LangChain%2FLangGraph-orange.svg)
 ![Pinecone](https://img.shields.io/badge/Pinecone-Vector_DB-blueviolet.svg)
+![Azure](https://img.shields.io/badge/Azure-Search-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -21,6 +22,7 @@ An intelligent HR analyst that combines PubMed data analysis, vector search, and
    - Automatic metadata extraction
    - Citation generation
    - Vector similarity search using Pinecone
+   - Bing grounding for real-time web context
 
 2. **Data Analysis & Visualization**
    - Dataset upload and storage in Azure Blob Storage
@@ -42,6 +44,8 @@ An intelligent HR analyst that combines PubMed data analysis, vector search, and
 4. **Azure Integration**
    - Azure Functions deployment
    - Azure Blob Storage for datasets
+   - Azure Cognitive Search for web grounding
+   - Azure Key Vault for secure key management
    - Managed identity and security
    - CI/CD pipeline with GitHub Actions
 
@@ -58,7 +62,12 @@ src/
 ├── tools/               # LangChain tools
 │   ├── pubmed_tool.py
 │   ├── pinecone_tool.py
+│   ├── bing_grounding_tool.py
 │   └── data_analysis_tool.py
+├── services/           # Service implementations
+│   ├── pubmed_service.py
+│   ├── pinecone_service.py
+│   └── bing_service.py
 ├── api/                 # API endpoints
 │   └── azure_function.py
 ├── config/             # Configuration
@@ -112,6 +121,10 @@ ENTREZ_EMAIL=your_email@example.com
 PINECONE_API_KEY=your_pinecone_api_key_here
 PINECONE_ENVIRONMENT=your_pinecone_environment
 AZURE_STORAGE_CONNECTION_STRING=your_azure_storage_connection_string
+AZURE_SEARCH_SERVICE_NAME=your-search-service
+AZURE_SEARCH_API_KEY=your-search-api-key
+AZURE_BING_SEARCH_KEY=your-bing-search-key
+AZURE_KEY_VAULT_NAME=your-keyvault
 ```
 
 5. Deploy to Azure:
@@ -122,13 +135,27 @@ az login
 # Create resource group
 az group create --name research-chat-rg --location eastus
 
+# Create Azure Cognitive Search
+az search service create --name your-search-service --resource-group research-chat-rg --sku standard --location eastus
+
+# Create Azure Key Vault
+az keyvault create --name your-keyvault --resource-group research-chat-rg --location eastus
+
+# Store the search API key in Key Vault
+az keyvault secret set --vault-name your-keyvault --name "search-api-key" --value "your-search-api-key"
+
+# Store the Bing Search key in Key Vault
+az keyvault secret set --vault-name your-keyvault --name "bing-search-key" --value "your-bing-search-key"
+
 # Deploy using Bicep
 az deployment group create \
   --resource-group research-chat-rg \
   --template-file azure/main.bicep \
   --parameters functionAppName=your-function-app-name \
   --parameters storageAccountName=yourstorageaccount \
-  --parameters appServicePlanName=your-app-service-plan
+  --parameters appServicePlanName=your-app-service-plan \
+  --parameters searchServiceName=your-search-service \
+  --parameters keyVaultName=your-keyvault
 ```
 
 ## API Usage
@@ -201,6 +228,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Uses Azure Functions for serverless deployment
 - Powered by Claude for natural language understanding
 - Data visualization with Plotly
+- Web grounding with Azure Cognitive Search
 
 ## 🙏 Acknowledgments/Credits
 * Built with Chainlit
@@ -210,6 +238,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### 📚 Additional Resources, Citations, and Attributes
 * [Streamlit Documentation](https://docs.streamlit.io/)
 * [Hugging Face Documentation](https://huggingface.co/docs/hub/index)
+* [Azure Cognitive Search Documentation](https://docs.microsoft.com/en-us/azure/search/)
 
 # Made with ❤️ by Halee
 

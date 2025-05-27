@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     AZURE_STORAGE_CONNECTION_STRING: str
     AZURE_STORAGE_CONTAINER: str = "datasets"
     
+    # Azure Search Configuration
+    AZURE_SEARCH_SERVICE_NAME: str
+    AZURE_SEARCH_API_KEY: str
+    AZURE_BING_SEARCH_KEY: str
+    AZURE_KEY_VAULT_NAME: str
+    
     # Model Configuration
     EMBEDDING_MODEL: str = "sentence-transformers/all-mpnet-base-v2"
     TEMPERATURE: float = 0.7

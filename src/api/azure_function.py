@@ -2,6 +2,7 @@ import azure.functions as func
 import json
 from src.chains.research_chain import ResearchChain
 from src.agents.data_analysis_agent import DataAnalysisAgent
+from src.services.bing_service import BingGroundingService
 from azure.storage.blob import BlobServiceClient
 from src.config.settings import settings
 import uuid
@@ -9,6 +10,7 @@ import uuid
 # Initialize agents
 research_chain = ResearchChain()
 data_analysis_agent = DataAnalysisAgent()
+bing_grounding_service = BingGroundingService()
 
 # Initialize Azure Storage
 blob_service_client = BlobServiceClient.from_connection_string(
@@ -54,7 +56,9 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
             # Handle research request
             elif request_type == "research":
                 user_input = req_body.get('query')
-                result = await research_chain.run(user_input)
+                # Add grounding results to the research chain
+                grounding_results = await bing_grounding_service.search(user_input)
+                result = await research_chain.run(user_input, grounding_results)
                 return func.HttpResponse(
                     json.dumps({'result': result}),
                     status_code=200

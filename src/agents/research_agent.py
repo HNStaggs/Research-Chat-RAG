@@ -8,6 +8,7 @@ from langchain_openai import ChatOpenAI
 from src.config.settings import settings
 from src.tools.pubmed_tool import PubMedTool
 from src.tools.pinecone_tool import PineconeTool
+from src.tools.bing_grounding_tool import BingGroundingTool
 from src.db.db_utils import (
     save_article,
     get_article_by_pmid,
@@ -25,6 +26,7 @@ class ResearchAgent:
         )
         self.pubmed_tool = PubMedTool()
         self.pinecone_tool = PineconeTool()
+        self.bing_grounding_tool = BingGroundingTool()
         
         # Initialize the research chain
         self.research_chain = self._create_research_chain()
@@ -92,6 +94,9 @@ class ResearchAgent:
                     "message": "No results found"
                 }
             
+            # Add Bing grounding
+            grounding_results = await self.bing_grounding_tool.run(query)
+            
             # Save articles to database
             article_ids = []
             for article in search_results:
@@ -116,6 +121,7 @@ class ResearchAgent:
                 "source": "new_search",
                 "articles": [self._format_article(article) for article in search_results],
                 "similar_articles": [self._format_article(article) for article in similar_articles],
+                "grounding_results": grounding_results,
                 "message": "New search completed successfully"
             }
             
