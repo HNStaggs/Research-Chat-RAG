@@ -122,7 +122,7 @@ PINECONE_API_KEY=your_pinecone_api_key_here
 PINECONE_ENVIRONMENT=your_pinecone_environment
 AZURE_STORAGE_CONNECTION_STRING=your_azure_storage_connection_string
 AZURE_SEARCH_SERVICE_NAME=your-search-service
-AZURE_SEARCH_API_KEY=your-search-api-key
+AZURE_SEARCH_API_KEY=your-search-api_key
 AZURE_BING_SEARCH_KEY=your-bing-search-key
 AZURE_KEY_VAULT_NAME=your-keyvault
 ```
@@ -166,7 +166,7 @@ POST /api/analyze
 Content-Type: application/json
 {
     "type": "research",
-    "query": "What are the latest developments in cancer immunotherapy?"
+    "query": "What are the latest developments in preventing employee burnout?"
 }
 ```
 
@@ -244,3 +244,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
+
+## Documentation References
+
+### Azure Services
+- [Azure Functions Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
+- [Azure Blob Storage Documentation](https://docs.microsoft.com/en-us/azure/storage/blobs/)
+- [Azure Cognitive Search Documentation](https://docs.microsoft.com/en-us/azure/search/)
+- [Azure Key Vault Documentation](https://docs.microsoft.com/en-us/azure/key-vault/)
+
+### SDKs and APIs
+- [Azure SDK for Python](https://github.com/Azure/azure-sdk-for-python)
+- [Azure Functions Python Guide](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-python)
