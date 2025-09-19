@@ -49,32 +49,6 @@ An intelligent HR analyst that combines PubMed data analysis, vector search, and
    - Managed identity and security
    - CI/CD pipeline with GitHub Actions
 
-## Project Structure
-
-```
-src/
-├── agents/                # Agent definitions
-│   ├── base_agent.py
-│   ├── research_agent.py
-│   └── data_analysis_agent.py
-├── chains/               # LangGraph workflows
-│   └── research_chain.py
-├── tools/               # LangChain tools
-│   ├── pubmed_tool.py
-│   ├── pinecone_tool.py
-│   ├── bing_grounding_tool.py
-│   └── data_analysis_tool.py
-├── services/           # Service implementations
-│   ├── pubmed_service.py
-│   ├── pinecone_service.py
-│   └── bing_service.py
-├── api/                 # API endpoints
-│   └── azure_function.py
-├── config/             # Configuration
-├── database/          # Database management
-├── models/           # Data models
-└── utils/           # Utility functions
-```
 
 ## Prerequisites
 
@@ -230,17 +204,16 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Data visualization with Plotly
 - Web grounding with Azure Cognitive Search
 
-## 🙏 Acknowledgments/Credits
+## Acknowledgments/Credits
 * Built with Chainlit
 * Uses Hugging Face Transformers Apache 2.0
 * Sample HR personnel dataset from: https://www.kaggle.com/datasets/mexwell/employee-performance-and-productivity-data
 
-### 📚 Additional Resources, Citations, and Attributes
+### Additional Resources, Citations, and Attributes
 * [Streamlit Documentation](https://docs.streamlit.io/)
 * [Hugging Face Documentation](https://huggingface.co/docs/hub/index)
 * [Azure Cognitive Search Documentation](https://docs.microsoft.com/en-us/azure/search/)
 
-# Made with ❤️ by Halee
-
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
+
